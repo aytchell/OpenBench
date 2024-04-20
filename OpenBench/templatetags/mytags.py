@@ -114,6 +114,88 @@ def longStatBlock(test):
 
     return '\n'.join(lines)
 
+def tinyStatBlock(test):
+    lower, elo, upper = OpenBench.stats.ELO([test.losses, test.draws, test.wins])
+    error = max(upper - elo, elo - lower)
+
+    lengthLimit = 4 if elo >= 0 else 5
+
+    if abs(elo) >= 100:
+        lengthLimit = lengthLimit - 1
+    
+    eloStr   = "" + str(elo)[:lengthLimit] + "\n"
+
+    return eloStr
+
+def llrBlock(test):
+    return twoDigitPrecision(test.currentllr)
+
+
+def speedometerStats(test):
+    # start settings
+
+    # maxElo is the elo value of the most positive big marker on the speedometer, 
+    # default max(max(abs(test.eloupper), abs(test.elolower)) * 2, 4)
+    # (test.elo[lower/upper] correspond to elo0 / elo1 (SPRT bounds))
+    maxElo = max(max(abs(test.eloupper), abs(test.elolower)) * 2, 4)
+
+    # minElo is the elo value of the most negative big marker on the speedometer,
+    # (note: while having minElo = -maxElo feels natural, its not strictly necessary, 
+    # when considering this, keep in mind that zero will always be in the middle, 
+    # so either value set to zero will lead to weird behaviour, 
+    # having min and max be the same sign might also lead to weird behaviour), default -maxElo
+    # , default -maxElo
+    minElo = -maxElo
+
+    # The furthest the needle will ever rotate in any (positive / negative) direction in degree,
+    # default 142
+    rotationLimit = 142
+
+    # The rotation of the needle in degree that corresponds to maxElo, default 136
+    # (this is the position of the last big marker)
+    maxRotation   = 136
+
+    # end settings
+
+    lines = []
+
+    lower, elo, upper = OpenBench.stats.ELO([test.losses, test.draws, test.wins])
+
+    # For minElo != - maxElo
+    if elo == 0:
+        lines.append("0")
+    elif elo > 0:
+        percentage = elo / maxElo
+        lines.append(str(min(percentage * maxRotation, rotationLimit)))
+    else :
+        percentage = abs(elo) / minElo
+        lines.append(str(max(percentage * maxRotation, -rotationLimit)))
+
+    error = max(upper - elo, elo - lower)
+    lower = elo - error
+    upper = elo + error
+
+    lowerPc = min(max(lower / (abs(maxElo) + 0.5), -1), 1) * 0.4
+    upperPc = min(max(upper / (abs(maxElo) + 0.5), -1), 1) * 0.4
+
+    lines.append(str(round(min(lowerPc + 0.5, 0.9) * 100)))
+    lines.append(str(round(min(0.5 - upperPc, 0.9) * 100)))
+
+    llr = test.currentllr
+
+    # llr limits are assymetric for most people
+    if llr == 0:
+        lines.append("0")
+    elif llr > 0:
+        percentage = llr / test.upperllr
+        lines.append(str(min(percentage * maxRotation, rotationLimit)))
+    else :
+        percentage = llr / test.lowerllr
+        lines.append(str(max(percentage * -maxRotation, -rotationLimit)))
+
+    return '\n'.join(lines)
+
+
 def testResultColour(test):
 
     if test.passed:
@@ -207,6 +289,9 @@ register.filter('twoDigitPrecision', twoDigitPrecision)
 register.filter('gitDiffLink', gitDiffLink)
 register.filter('shortStatBlock', shortStatBlock)
 register.filter('longStatBlock', longStatBlock)
+register.filter('tinyStatBlock', tinyStatBlock)
+register.filter('llrBlock', llrBlock)
+register.filter('speedometerStats', speedometerStats)
 register.filter('testResultColour', testResultColour)
 register.filter('sumAttributes', sumAttributes)
 register.filter('insertCommas', insertCommas)

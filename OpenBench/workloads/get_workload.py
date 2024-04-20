@@ -45,7 +45,7 @@ def get_workload(machine):
     result, created = Result.objects.get_or_create(test=test, machine=machine)
 
     # Update the Machine's status and save everything
-    machine.workload = test.id;
+    machine.workload = test.id
     machine.mnps = machine.dev_mnps = machine.base_mnps = 0.00
     machine.save(); result.save()
 

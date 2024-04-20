@@ -50,6 +50,7 @@ urlpatterns = [
 
     # Links for viewing and managing tests
     django.urls.path(r'test/<int:id>/', OpenBench.views.test),
+    django.urls.path(r'speedometer/<int:id>/', OpenBench.views.speedometer),
     django.urls.path(r'test/<int:id>/<str:action>', OpenBench.views.test),
     django.urls.path(r'newTest/', OpenBench.views.create_test),
 

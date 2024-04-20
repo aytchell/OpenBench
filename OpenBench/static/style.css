@@ -396,6 +396,7 @@ td pre {
         overflow-y: auto;
         transition: transform cubic-bezier(0.82, 0.08, 0.1, 0.93) 0.3s;
         transform: translateX(-100%);
+        z-index: 1;
     }
 
     body.sidebar-open #sidebar {

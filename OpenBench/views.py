@@ -32,6 +32,7 @@ from OpenBench.workloads.get_workload import get_workload
 from OpenBench.workloads.modify_workload import modify_workload
 from OpenBench.workloads.verify_workload import verify_workload
 from OpenBench.workloads.view_workload import view_workload
+from OpenBench.workloads.view_workload import view_speedometer
 
 from OpenBench.config import OPENBENCH_CONFIG, OPENBENCH_STATIC_VERSION
 from OpenSite.settings import PROJECT_PATH
@@ -434,6 +435,21 @@ def event(request, id):
             return render(request, 'event.html', { 'content' : fin.read() })
     except:
         return redirect(request, '/index/', error='No logs for event exist')
+
+def speedometer(request, id, action=None): 
+    # Request is to modify or interact with the Test
+    if action != None:
+        return modify_workload(request, id, action)
+
+    # Verify that the Test id exists
+    if not (test := Test.objects.filter(id=id).first()):
+        return redirect(request, '/index/', error='No such Test exists')
+    
+    # Verify that it is indeed a Test and not a Tune
+    if test.test_mode != 'SPRT':
+        return redirect(request, '/index/', error='This test is not a SPRT')
+
+    return view_speedometer(request, test, 'TEST')
 
 def events_actions(request, page=1):
 

@@ -1,0 +1,355 @@
+{% extends "OpenBench/base.html" %}
+
+{% load mytags %}
+
+{% block content %}
+
+<style>
+
+    :root {
+      /* start settings */
+
+      /* Color of the Elo / LLR needle, default #FFAE03 */
+      --needleColor: #FFAE03;
+
+      /* Opacity of needle, default 80% */
+      --needleOpacity: 80%;
+
+      /* Duration of the needles animation, default 1s */
+      --needleAnimationDuration: 1s;
+
+      /* Color of the needle holder (circle in the middle), default #006494  */
+      --needleHolderColor: #006494;
+
+      /* Color of the negative Elo display side, default darkred */
+      --negEloColor: darkred;
+
+      /* Color of the positive Elo display side, default darkgreen */
+      --posEloColor: darkgreen;
+
+      /* Color of the middle of the LLR speedometer, default #BB4400 */
+      --llrDisplayColor: #BB4400;
+
+      /* Color of the small markers, default #ccb8b8 */
+      --smallMarkerColor: #ccb8b8;
+
+      /* Color of the big markers, default #ccb8b8 */
+      --bigMarkerColor: #ccb8b8;
+
+      /* Color of the "Elo" / "LLR" writing (the thing on the top), default #ccb8b8 */
+      --letterColor: #ccb8b8;
+
+      /* Color of the elo / llr values (the thing on the bottom), default #ccb8b8 */
+      --valueColor: #ccb8b8;
+
+      /* Color of the background, default black */
+      --backgroundColor: black;
+
+      /* Color of the display outline (note the default width is one, its barely visible), default white*/
+      --outlineColor: white;
+
+      /* Width of the outline (), default 1px */
+      --outlineWidth: 1px;
+
+      /* end settings */
+
+      --eloNeedleRotation: 0deg;
+      --llrNeedleRotation: 0deg;
+      --lowerPercent: 10%;
+      --upperPercent: 10%;
+      --eloAlignment: 105px;
+      --llrAlignment: 105px;
+    }
+
+    .speedometer {
+      text-align: center;
+    }
+
+    @media screen and (max-width: 767px) {
+      .speedometer {
+        margin-top: 25px;
+        margin-left: calc(50vw - 133px);
+        text-align: left;
+      }
+    }
+
+    .orangeDisplay {
+      width: 150px;
+      height: 150px;
+      margin-top: 25px;
+      margin-left: 25px;
+      margin-right: 25px;
+      border-radius: 50%;
+      display: inline-block;
+      position: absolute;
+      border: solid 25px var(--llrDisplayColor, #BB4400);
+      transform: rotate(-136deg);
+      position: absolute;
+      --mask: 
+          conic-gradient(red 75%, transparent 0%);
+      -webkit-mask: var(--mask);
+          mask: var(--mask)
+    }
+
+    .colorDisplay {
+      height: 200px;
+      width: 200px;
+      margin-top: 25px;
+      margin-left: 25px;
+      margin-right: 25px;
+      border-radius: 50%;
+      display: inline-block;
+      background-image: -webkit-linear-gradient(left, var(--negEloColor, darkred), var(--negEloColor, darkred) 50%, 
+                                                      var(--posEloColor, darkgreen) 50%, var(--posEloColor, darkgreen) 100%);
+      position: absolute;
+    }
+
+    .displayOutline {
+      height: 250px;
+      width: 250px;
+      margin-top: 0px;
+      margin-left: 0px;
+      margin-right: 25px;
+      border-radius: 50%;
+      display: inline-block;
+      background-image: radial-gradient(transparent 56%, grey 56%, black 56%, grey 72%, transparent 72%);
+      outline: var(--outlineWidth) solid var(--outlineColor, white);
+      position: absolute;
+    }
+
+    .smallMarker {
+      width: 3px; 
+      height: 120px;
+      margin-top: 5px;
+      margin-left: 123px;
+      display: inline-block;
+      background-image: -webkit-linear-gradient(top, var(--smallMarkerColor, #ccb8b8), var(--smallMarkerColor, #ccb8b8) 22%, transparent 9%, transparent 100%);
+      transform-origin: bottom;
+      transform: rotate(var(--rotation));
+      position: absolute;
+    }
+
+    .bigMarker {
+      width: 5px; 
+      height: 119px;
+      margin-top: 5px;
+      margin-left: 122.5px;
+      display: inline-block;
+      background: var(--bigMarkerColor, #ccb8b8);
+      transform-origin: bottom center;
+      transform: rotate(var(--rotation));
+      position: absolute;
+    }
+
+    .eloNeedle, .llrNeedle {
+      width: 0; 
+      height: 0; 
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 100px solid var(--needleColor, #FFAE03);
+      opacity: var(--needleOpacity, 80%);
+      margin-top: 25px;
+      margin-left: 120.5px;
+      background-color: transparent;
+      transform-origin: bottom;
+      transition: all var(--needleAnimationDuration, 1s) ease-in-out;
+      display: inline-block;
+      position: absolute;
+    }
+
+    .eloNeedle {
+      transform: rotate(var(--eloNeedleRotation));
+    }
+
+    .llrNeedle {
+      transform: rotate(var(--llrNeedleRotation));
+    }
+
+    .needleHolder {
+      height: 35px;
+      width: 35px;
+      margin-top: 110px;
+      margin-left: 109px;
+      margin-right: 25px;
+      border-radius: 50%;
+      background-color: var(--needleHolderColor, #006494);
+      display: inline-block;
+      position: absolute;
+    }
+
+    .coverGreen, .coverGreenLLR, .coverRed, .coverRedLLR {
+        width: 150px;
+        height: 150px;
+        margin-top: 25px;
+        margin-left: 25px;
+        margin-right: 25px;
+        border-radius: 50%;
+        display: inline-block;
+        position: absolute;
+        border: solid 25px var(--backgroundColor, black);
+        position: absolute;
+        -webkit-mask: var(--mask);
+            mask: var(--mask)
+    }
+
+    /* The transform part of this could probably be simplified further, I Just couldnt get it to work */
+
+    .coverGreen {
+      transform: rotate(180deg) scaleX(-1);
+      --mask: conic-gradient(red var(--upperPercent, 10%), transparent 0%);
+    }
+
+    .coverGreenLLR {
+      transform: rotate(180deg) scaleX(-1);
+      --mask: conic-gradient(red 10%, transparent 0%);
+    }
+
+    .coverRed {
+      transform: rotate(180deg);
+      --mask: conic-gradient(red var(--lowerPercent, 10%), transparent 0%);
+    }
+
+    .coverRedLLR {
+      transform: rotate(180deg);
+        --mask: conic-gradient(red 10%, transparent 0%);
+    }
+
+    .inner {
+      height: 152px;
+      width:  152px;
+      margin-top: 49px;
+      margin-left: 49px;
+      margin-right: 25px;
+      border-radius: 50%;
+      display: inline-block;
+      background-color: var(--backgroundColor, black);
+      position: absolute;
+    }
+
+    .eloInscription {
+      color: var(--letterColor, #ccb8b8);
+      font-family: sans-serif;
+      font-size: 22px;
+      display: inline-block;
+      margin-left: 108px;
+      margin-top: 75px;
+      position: absolute;
+    }
+
+    .eloValueInscription, .llrValueInscription {
+      color: var(--valueColor, #ccb8b8);
+      font-family: sans-serif;
+      font-size: 23px;
+      display: inline-block;
+      margin-top: 185px;
+      position: absolute;
+    }
+
+    .eloValueInscription {
+      margin-left: var(--eloAlignment);
+    }
+
+    .llrValueInscription {
+      margin-left: var(--llrAlignment);
+    }
+
+</style>
+
+<div class="workload-container" style="display: none;">
+    <pre class="speedometerStats" id="speedometerStats" style="display: none;">{{workload|speedometerStats}}</pre>
+</div>
+
+<script>
+    var r = document.querySelector(':root');
+
+    window.onload = function setSpeedometerStuff() {
+        var argsSingle = document.getElementById('speedometerStats').innerHTML;
+        var argsAr = argsSingle.split("\n");
+        
+        var eloNeedleRotation = argsAr[0] + "deg";
+        var llrNeedleRotation = argsAr[3] + "deg";
+        var lowerPercent = argsAr[1] + "%";
+        var upperPercent = argsAr[2] + "%";
+        var eloAlignment = "100px";
+        var llrAlignment = "100px"
+
+        if (argsAr[0] < 0) {
+          eloAlignment = "95px";
+        }
+
+        if (argsAr[3] < 0) {
+          llrAlignment = "95px";
+        }
+
+        r.style.setProperty('--eloNeedleRotation', eloNeedleRotation);
+        r.style.setProperty('--llrNeedleRotation', llrNeedleRotation);
+        r.style.setProperty('--lowerPercent', lowerPercent);
+        r.style.setProperty('--upperPercent', upperPercent);
+        r.style.setProperty('--eloAlignment', eloAlignment);
+        r.style.setProperty('--llrAlignment', llrAlignment);
+        var rs = getComputedStyle(r);
+    }
+</script>
+
+<div class="speedometer">
+    <div style="position: relative; min-width: 280px; min-height: 280px;">
+        <div class="colorDisplay"></div>
+        <div class="orangeDisplay"></div>
+        <div class="coverRedLLR"></div>
+        <div class="coverGreenLLR"></div>
+        <div style="--rotation: 0deg" class="bigMarker"></div>
+        <div style="--rotation: 68deg" class="bigMarker"></div>
+        <div style="--rotation: 136deg" class="bigMarker"></div>
+        <div style="--rotation: 293deg" class="bigMarker"></div>
+        <div style="--rotation: 224deg" class="bigMarker"></div>
+        <div style="--rotation: 17deg" class="smallMarker"></div>
+        <div style="--rotation: 34deg" class="smallMarker"></div>
+        <div style="--rotation: 51deg" class="smallMarker"></div>
+        <div style="--rotation: 85deg" class="smallMarker"></div>
+        <div style="--rotation: 102deg" class="smallMarker"></div>
+        <div style="--rotation: 119deg" class="smallMarker"></div>
+        <div style="--rotation: 343deg" class="smallMarker"></div>
+        <div style="--rotation: 326deg" class="smallMarker"></div>
+        <div style="--rotation: 309deg" class="smallMarker"></div>
+        <div style="--rotation: 275deg" class="smallMarker"></div>
+        <div style="--rotation: 258deg" class="smallMarker"></div>
+        <div style="--rotation: 241deg" class="smallMarker"></div>
+        <div class="inner"></div>
+        <div class="displayOutline"></div>
+        <div class="eloInscription">LLR</div>
+        <div class="llrValueInscription">{{workload|llrBlock|linebreaksbr}}</div>
+        <div class="llrNeedle"></div>
+        <div class="needleHolder"></div>
+    </div>
+
+    <div style="position: relative; min-width: 280px; min-height: 280px;">
+      <div class="colorDisplay"></div>
+      <div class="coverRed"></div>
+      <div class="coverGreen"></div>
+      <div style="--rotation: 0deg" class="bigMarker"></div>
+      <div style="--rotation: 68deg" class="bigMarker"></div>
+      <div style="--rotation: 136deg" class="bigMarker"></div>
+      <div style="--rotation: 293deg" class="bigMarker"></div>
+      <div style="--rotation: 224deg" class="bigMarker"></div>
+      <div style="--rotation: 17deg" class="smallMarker"></div>
+      <div style="--rotation: 34deg" class="smallMarker"></div>
+      <div style="--rotation: 51deg" class="smallMarker"></div>
+      <div style="--rotation: 85deg" class="smallMarker"></div>
+      <div style="--rotation: 102deg" class="smallMarker"></div>
+      <div style="--rotation: 119deg" class="smallMarker"></div>
+      <div style="--rotation: 343deg" class="smallMarker"></div>
+      <div style="--rotation: 326deg" class="smallMarker"></div>
+      <div style="--rotation: 309deg" class="smallMarker"></div>
+      <div style="--rotation: 275deg" class="smallMarker"></div>
+      <div style="--rotation: 258deg" class="smallMarker"></div>
+      <div style="--rotation: 241deg" class="smallMarker"></div>
+      <div class="inner"></div>
+      <div class="displayOutline"></div>
+      <div class="eloInscription">Elo</div>
+      <div class="eloValueInscription">{{workload|tinyStatBlock|linebreaksbr}}</div>
+      <div class="eloNeedle"></div>
+      <div class="needleHolder"></div>
+  </div>
+</div>
+
+{% endblock %}
