@@ -61,6 +61,22 @@
                 <tr><td class="td-label">Play Reverses</td><td>{{workload.play_reverses}}</td></tr>
             {% endif %}
 
+            {% if type == "TUNE" and workload.upperllr == 72 %}
+                <tr><td class="td-label">HL Size</td><td>{{workload.spsa.hl_size}}</td></tr>
+                <tr><td class="td-label">In Weight Max</td><td>{{workload.spsa.input_weight_maximum}}</td></tr>
+                <tr><td class="td-label">In Weight C</td><td>{{workload.spsa.input_weight_c}}</td></tr>
+                <tr><td class="td-label">In Weight R</td><td>{{workload.spsa.input_weight_r}}</td></tr>
+                <tr><td class="td-label">HL Bias Max</td><td>{{workload.spsa.hl_bias_max}}</td></tr>
+                <tr><td class="td-label">HL Bias C</td><td>{{workload.spsa.hl_bias_c}}</td></tr>
+                <tr><td class="td-label">HL Bias R</td><td>{{workload.spsa.hl_bias_r}}</td></tr>
+                <tr><td class="td-label">Out Weight Max</td><td>{{workload.spsa.output_weight_maximum}}</td></tr>
+                <tr><td class="td-label">Out Weight C</td><td>{{workload.spsa.output_weight_c}}</td></tr>
+                <tr><td class="td-label">Out Weight R</td><td>{{workload.spsa.output_weight_r}}</td></tr>
+                <tr><td class="td-label">Out Bias Max</td><td>{{workload.spsa.out_bias_max}}</td></tr>
+                <tr><td class="td-label">Out Bias C</td><td>{{workload.spsa.out_bias_c}}</td></tr>
+                <tr><td class="td-label">Out Bias R</td><td>{{workload.spsa.out_bias_r}}</td></tr>
+            {% endif %}
+
         </table>
     </div>
 
@@ -136,7 +152,7 @@
         {% endif %}
 
         <!-- Copies Raw SPSA Input from a hidden element -->
-        {% if type == "TUNE" %}
+        {% if type == "TUNE" and workload.upperllr != 72 %}
             <div class="anchor-container">
                 <pre id="spsa-input" style="display: none">{{workload|spsa_original_input}}</pre>
                 <a class="mt-1 anchorbutton btn-blue" onclick="copy_text('spsa-input', false)">Copy SPSA Inputs</a>
@@ -144,12 +160,20 @@
         {% endif %}
 
         <!-- Copies SPSA Optimal Values from a hidden element -->
-        {% if type == "TUNE" %}
+        {% if type == "TUNE" and workload.upperllr != 72 %}
             <div class="anchor-container">
                 <pre id="spsa-output" style="display: none">{{workload|spsa_optimal_values}}</pre>
                 <a class="mt-1 anchorbutton btn-blue" onclick="copy_text('spsa-output', false)">Copy SPSA Outputs</a>
             </div>
         {% endif %}
+
+        {% if type == "TUNE" and workload.upperllr == 72 %}
+            <div class="anchor-container">
+                <pre id="spsa-output" style="display: none">{{workload|spsa_optimal_values}}</pre>
+                <a class="mt-1 anchorbutton btn-blue" href="/netTune/DOWNLOAD/{{workload.id}}">Download Current Net</a>
+            </div>
+        {% endif %}
+
 
         <!-- Elo, (SPRT/LRR if SPRT, otherwise CONF), Games -->
         {% if type == "TEST" %}
@@ -195,7 +219,7 @@
     </div>
 
     <!-- SPSA Paramater Summary, for Tunes -->
-    {% if type == "TUNE" %}
+    {% if type == "TUNE" and workload.upperllr != 72 %}
         <div id="parameters" class="w-100 mt-3" style="float:left;">
             <table class="stripes wrappable">
 

@@ -48,7 +48,7 @@ from OpenBench.models import *
 
 def verify_workload(request, workload_type):
 
-    assert workload_type in [ 'TEST', 'TUNE', 'DATAGEN' ]
+    assert workload_type in [ 'TEST', 'TUNE', 'DATAGEN' , 'NET_TUNE']
 
     errors = []
 
@@ -62,6 +62,12 @@ def verify_workload(request, workload_type):
         verify_tune_creation(errors, request)
         engine = collect_github_info(errors, request, 'dev')
         return errors, engine
+
+    if workload_type == 'NET_TUNE':
+        verify_tune_creation(errors, request, True)
+        engine = collect_github_info(errors, request, 'dev')
+        return errors, engine
+
 
     if workload_type == 'DATAGEN':
         verify_datagen_creation(errors, request)
@@ -115,12 +121,11 @@ def verify_test_creation(errors, request):
     for verification in verifications:
         verification[0](errors, request, *verification[1:])
 
-def verify_tune_creation(errors, request):
+def verify_tune_creation(errors, request, netTune = False):
 
     verifications = [
 
         # Verify the SPSA raw inputs and methods
-        (verify_spsa_inputs           , 'spsa_inputs'),
         (verify_spsa_reporting_type   , 'spsa_reporting_type', 'Reporting Method'),
         (verify_spsa_distribution_type, 'spsa_distribution_type', 'Distribution Method'),
 
@@ -158,6 +163,9 @@ def verify_tune_creation(errors, request):
         (verify_greater_than          , 'spsa_iterations', 'SPSA Iterations', 0),
         (verify_greater_than          , 'spsa_pairs_per', 'SPSA Pairs-Per', 0),
     ]
+
+    if not netTune:
+        verifications.append((verify_spsa_inputs, 'spsa_inputs'))
 
     for verification in verifications:
         verification[0](errors, request, *verification[1:])

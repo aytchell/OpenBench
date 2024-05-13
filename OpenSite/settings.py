@@ -132,3 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Needed for net spsas
+DATA_UPLOAD_MAX_MEMORY_SIZE   = 12800000
+# (768 -> 512)x2 -> 8 -> 1 net + 500
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 6292477 

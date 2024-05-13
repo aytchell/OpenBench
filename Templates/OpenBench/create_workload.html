@@ -98,7 +98,7 @@
                         <label for="base_time_control" > Base Time </label> <input id="base_time_control" name="base_time_control">
                     </div>
 
-                {% elif workload == "TUNE" %}
+                {% elif workload == "TUNE" or workload == "NET_TUNE" %}
 
                     <h3> SPSA Methodologies </h3>
 
@@ -118,11 +118,74 @@
                         </select>
                     </div>
 
-                    <h3> SPSA Input </h3>
+                    {% if workload == "TUNE" %}
 
-                    <div class="row">
-                        <textarea style="margin-left:24px" id="spsa_inputs" name="spsa_inputs" rows=9></textarea>
-                    </div>
+                        <h3> SPSA Input </h3>
+
+                        <div class="row">
+                            <textarea style="margin-left:24px" id="spsa_inputs" name="spsa_inputs" rows=9></textarea>
+                        </div>
+                        
+                    {% endif %}
+
+                    {% if workload == "NET_TUNE" %}
+
+                        <h3> Net Settings </h3>
+
+                        <div class="row">
+                            <label for="hidden_layer_size" > HL Size </label> <input id="hidden_layer_size" name="hidden_layer_size">
+                        </div>
+
+                        <div class="row">
+                            <label for="input_weight_maximum" > Input Weight Max  </label> <input id="input_weight_maximum" name="input_weight_maximum">
+                        </div>
+
+                        <div class="row">
+                            <label for="input_weight_c" > Input Weight C </label> <input id="input_weight_c" name="input_weight_c">
+                        </div>
+
+                        <div class="row">
+                            <label for="input_weight_r" > Input Weight R </label> <input id="input_weight_r" name="input_weight_r">
+                        </div>
+
+                        <div class="row">
+                            <label for="output_weight_maximum" > Out Weight Max </label> <input id="output_weight_maximum" name="output_weight_maximum">
+                        </div>
+
+                        <div class="row">
+                            <label for="output_weight_c" > Out Weight C </label> <input id="output_weight_c" name="output_weight_c">
+                        </div>
+
+                        <div class="row">
+                            <label for="output_weight_r" > Out Weight R </label> <input id="output_weight_r" name="output_weight_r">
+                        </div>
+
+                        <div class="row">
+                            <label for="hl_bias_max" > HL Bias Max  </label> <input id="hl_bias_max" name="hl_bias_max">
+                        </div>
+
+                        <div class="row">
+                            <label for="hl_bias_c" > HL Bias C </label> <input id="hl_bias_c" name="hl_bias_c">
+                        </div>
+
+                        <div class="row">
+                            <label for="hl_bias_r" > HL Bias R </label> <input id="hl_bias_r" name="hl_bias_r">
+                        </div>
+
+                        <div class="row">
+                            <label for="out_bias_max" > Out Bias Max </label> <input id="out_bias_max" name="out_bias_max">
+                        </div>
+
+                        <div class="row">
+                            <label for="out_bias_c" > Out Bias C </label> <input id="out_bias_c" name="out_bias_c">
+                        </div>
+
+                        <div class="row">
+                            <label for="out_bias_r" > Out Bias R </label> <input id="out_bias_r" name="out_bias_r">
+                        </div>
+                        
+                    {% endif %}
+
 
                 {% endif %}
 
@@ -154,7 +217,7 @@
                         <label for="test_max_games"> Max Games </label> <input id="test_max_games" name="test_max_games">
                     </div>
 
-                {% elif workload == "TUNE" %}
+                {% elif workload == "TUNE" or workload == "NET_TUNE" %}
 
                     <h3> SPSA Settings </h3>
 

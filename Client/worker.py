@@ -35,6 +35,7 @@ import time
 import traceback
 import uuid
 import zipfile
+import struct
 
 from subprocess import PIPE, Popen, call, STDOUT
 from itertools import combinations_with_replacement
@@ -337,7 +338,7 @@ class ServerReporter:
         payload['trinomial'  ] = ' '.join(map(str, payload['trinomial'  ]))
         payload['pentanomial'] = ' '.join(map(str, payload['pentanomial']))
 
-        print (payload)
+        #print (payload)
 
         return ServerReporter.report(config, 'clientSubmitResults', payload)
 
@@ -470,9 +471,24 @@ class Cutechess:
             options += ' SyzygyProbeLimit=%s' % (syzygy.split('-')[0])
 
         # Add any of the custom SPSA settings
-        if config.workload['test']['type'] == 'SPSA':
+        if config.workload['test']['type'] == 'SPSA' and not config.workload['netTune']:
             for param, data in config.workload['spsa'].items():
                 options += ' %s=%s' % (param, str(data[branch][cutechess_idx]))
+
+        if config.workload['test']['type'] == 'SPSA' and config.workload['netTune'] :
+            name = str(config.workload['test']['id']) + '_' + str(branch) + '.nnue'
+            path = 'Netorks/' + name
+
+            os.chdir('Networks/')
+
+            with open(name, 'wb') as f:
+                for param, data in config.workload['spsa'].items():
+                    packed = struct.pack('<h', int(data[branch][cutechess_idx]))
+                    f.write(packed)
+
+            os.chdir('..')
+            options += ' EvalFile=%s' % (os.path.join('../Networks', name))
+                    
 
         # Join options together in the Cutechess format
         options = ' option.'.join([''] + re.findall(r'"[^"]*"|\S+', options))

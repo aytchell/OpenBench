@@ -64,6 +64,9 @@ urlpatterns = [
     django.urls.path(r'datagen/<int:id>/<str:action>', OpenBench.views.datagen),
     django.urls.path(r'newDatagen/', OpenBench.views.create_datagen),
 
+    django.urls.path(r'newNetTune/', OpenBench.views.create_net_tune),
+    django.urls.path(r'netTune/DOWNLOAD/<int:id>', OpenBench.views.download_tuned_net),
+
     # Links for viewing and managing Networks
     django.urls.path(r'networks/', OpenBench.views.networks),
     django.urls.path(r'networks/<str:engine>/', OpenBench.views.networks),

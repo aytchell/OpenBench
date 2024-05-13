@@ -43,9 +43,10 @@ function create_preset_buttons(engine, workload_type) {
     while (button_div.hasChildNodes())
         button_div.removeChild(button_div.lastChild);
 
-    const presets = workload_type == 'TEST'    ? config.engines[engine].test_presets
-                  : workload_type == 'TUNE'    ? config.engines[engine].tune_presets
-                  : workload_type == 'DATAGEN' ? config.engines[engine].datagen_presets : {};
+    const presets = workload_type == 'TEST'     ? config.engines[engine].test_presets
+                  : workload_type == 'TUNE'     ? config.engines[engine].tune_presets
+                  : workload_type == 'DATAGEN'  ? config.engines[engine].datagen_presets 
+                  : workload_type == 'NET_TUNE' ? config.engines[engine].net_tune_presets : {};
 
     var index = 0;
     for (let mode in presets) {
@@ -95,9 +96,10 @@ function get_base_engine() {
 }
 
 function get_presets(engine, preset, workload_type) {
-    return workload_type == 'TEST'    ? config.engines[engine].test_presets[preset]
-         : workload_type == 'TUNE'    ? config.engines[engine].tune_presets[preset]
-         : workload_type == 'DATAGEN' ? config.engines[engine].datagen_presets[preset] : {};
+    return workload_type == 'TEST'     ? config.engines[engine].test_presets[preset]
+         : workload_type == 'TUNE'     ? config.engines[engine].tune_presets[preset]
+         : workload_type == 'DATAGEN'  ? config.engines[engine].datagen_presets[preset] 
+         : workload_type == 'NET_TUNE' ? config.engines[engine].net_tune_presets[preset] : {};
 }
 
 

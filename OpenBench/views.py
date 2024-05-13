@@ -18,7 +18,7 @@
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-import os, hashlib, datetime, json, secrets, sys, re
+import os, hashlib, datetime, json, secrets, sys, re, io
 
 import django.http
 import django.shortcuts
@@ -57,6 +57,8 @@ from googleapiclient.discovery import build
 import socket
 
 import tempfile
+
+import struct
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                              GENERAL UTILITIES                              #
@@ -554,6 +556,9 @@ def create_tune(request):
 def create_datagen(request):
     return create_workload(request, 'DATAGEN')
 
+def create_net_tune(request):
+    return create_workload(request, 'NET_TUNE')
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                          NETWORK MANAGEMENT VIEWS                           #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -608,6 +613,32 @@ def network_form(request):
     if request.method == 'GET':
         return render(request, 'uploadnet.html', {})
 
+def download_tuned_net(request, id):
+
+    buffer   = io.BytesIO()
+    workload = Test.objects.filter(id=id).first()
+
+    keys = sorted(
+        workload.spsa['parameters'].keys(),
+        key=lambda x: workload.spsa['parameters'][x].get('index', -1)
+    )
+
+    for name in keys:
+        packed = struct.pack('<h', int(workload.spsa['parameters'][name]['value']))
+        buffer.write(packed)   
+
+    buffer.seek(0)
+
+    response  = FileResponse(buffer, content_type='application/octet-stream')
+    prefix    = workload.dev_network if workload.dev_network else "emptyNet"
+    iteration = str(int(1 + (workload.games / (workload.spsa['pairs_per'] * 2))))
+    name      = prefix + '_iteration_' + iteration + '.nnue'
+
+    # Set all headers and return response
+    response['Content-Length'] = buffer.getbuffer().nbytes
+    response['Content-Disposition'] = 'attachment; filename=' + name
+    return response
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                             OPENBENCH SCRIPTING                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -634,7 +665,8 @@ def verify_worker(function):
     def wrapped_verify_worker(*args, **kwargs):
 
         # Get the machine, assuming it exists
-        try: machine = Machine.objects.get(id=int(args[0].POST['machine_id']))
+        machineId = int(args[0].POST['machine_id'])
+        try: machine = Machine.objects.get(id=machineId)
         except: return JsonResponse({ 'error' : 'Bad Machine Id' })
 
         # Ensure the Client is using the same version as the Server

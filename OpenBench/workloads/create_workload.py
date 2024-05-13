@@ -38,9 +38,11 @@ from OpenBench.models import *
 from OpenBench.config import OPENBENCH_CONFIG
 from OpenBench.workloads.verify_workload import verify_workload
 
+import struct
+
 def create_workload(request, workload_type):
 
-    assert workload_type in [ 'TEST', 'TUNE', 'DATAGEN' ]
+    assert workload_type in [ 'TEST', 'TUNE', 'DATAGEN', 'NET_TUNE' ]
 
     if not request.user.is_authenticated:
         return OpenBench.views.redirect(request, '/login/', error='Only enabled users can create tests')
@@ -73,6 +75,14 @@ def create_workload(request, workload_type):
             data['submit_text']     = 'Create Datagen'
             data['submit_endpoint'] = '/newDatagen/'
 
+        if workload_type == 'NET_TUNE':
+            data['workload']        = workload_type
+            data['dev_text']        = ''
+            data['dev_title_text']  = 'Engine'
+            data['submit_text']     = 'Create Net Tune'
+            data['submit_endpoint'] = '/newNetTune/'
+
+
         return OpenBench.views.render(request, 'create_workload.html', data)
 
     if workload_type == 'TEST':
@@ -84,8 +94,11 @@ def create_workload(request, workload_type):
     elif workload_type == 'DATAGEN':
         workload, errors = create_new_datagen(request)
 
+    elif workload_type == 'NET_TUNE':
+        workload, errors = create_new_tune(request, True)
+
     if errors != [] and errors != None:
-        paths = { 'TEST' : '/newTest/', 'TUNE' : '/newTune/', 'DATAGEN' : '/newDatagen/' }
+        paths = { 'TEST' : '/newTest/', 'TUNE' : '/newTune/', 'DATAGEN' : '/newDatagen/', 'NET_TUNE' : '/newNetTune/' }
         return OpenBench.views.redirect(request, paths[workload_type], error='\n'.join(errors))
 
     if warning := OpenBench.utils.branch_is_out_of_date(workload):
@@ -167,10 +180,11 @@ def create_new_test(request):
 
     return test, None
 
-def create_new_tune(request):
+def create_new_tune(request, netTune = False):
 
     # Collects erros, and collects all data from the Github API
-    errors, engine_info = verify_workload(request, 'TUNE')
+
+    errors, engine_info = verify_workload(request, 'TUNE' if not netTune else 'NET_TUNE')
     dev_info, dev_has_all = engine_info
 
     if errors:
@@ -198,9 +212,12 @@ def create_new_tune(request):
     test.draw_adj         = request.POST['draw_adj']
 
     test.test_mode        = 'SPSA'
-    test.spsa             = extract_spas_params(request)
+    test.spsa             = extract_spas_params(request, netTune, test.dev_network)
 
     test.awaiting         = not dev_has_all
+
+    if netTune:
+        test.upperllr = 72
 
     if test.dev_network:
         name = Network.objects.get(engine=test.dev_engine, sha256=test.dev_network).name
@@ -276,7 +293,7 @@ def create_new_datagen(request):
 
     return test, None
 
-def extract_spas_params(request):
+def extract_spas_params(request, netTune, netSHA):
 
     spsa = {} # SPSA Hyperparams
     spsa['Alpha'  ] = float(request.POST['spsa_alpha'])
@@ -294,32 +311,122 @@ def extract_spas_params(request):
 
     # Each individual tuning parameter
     spsa['parameters'] = {}
-    for index, line in enumerate(request.POST['spsa_inputs'].split('\n')):
+    if not netTune:
+        for index, line in enumerate(request.POST['spsa_inputs'].split('\n')):
 
-        # Comma-seperated values, already verified in verify_workload()
-        name, data_type, value, minimum, maximum, c_end, r_end = line.split(',')
+            # Comma-seperated values, already verified in verify_workload()
+            name, data_type, value, minimum, maximum, c_end, r_end = line.split(',')
 
-        # Recall the original order of inputs
-        param          = {}
-        param['index'] = index
+            # Recall the original order of inputs
+            param          = {}
+            param['index'] = index
 
-        # Raw extraction
-        param['float'] = data_type.strip() == 'float'
-        param['start'] = float(value)
-        param['value'] = float(value)
-        param['min'  ] = float(minimum)
-        param['max'  ] = float(maximum)
-        param['c_end'] = float(c_end)
-        param['r_end'] = float(r_end)
+            # Raw extraction
+            param['float'] = data_type.strip() == 'float'
+            param['start'] = float(value)
+            param['value'] = float(value)
+            param['min'  ] = float(minimum)
+            param['max'  ] = float(maximum)
+            param['c_end'] = float(c_end)
+            param['r_end'] = float(r_end)
 
-        # Verbatim Fishtest logic for computing these
-        param['c']     = param['c_end'] * spsa['iterations'] ** spsa['Gamma']
-        param['a_end'] = param['r_end'] * param['c_end'] ** 2
-        param['a']     = param['a_end'] * (spsa['A'] + spsa['iterations']) ** spsa['Alpha']
+            # Verbatim Fishtest logic for computing these
+            param['c']     = param['c_end'] * spsa['iterations'] ** spsa['Gamma']
+            param['a_end'] = param['r_end'] * param['c_end'] ** 2
+            param['a']     = param['a_end'] * (spsa['A'] + spsa['iterations']) ** spsa['Alpha']
 
-        spsa['parameters'][name] = param
+            spsa['parameters'][name] = param
+    else:
+        hlSize = int(request.POST['hidden_layer_size'])
+
+        spsa['hl_size'] = hlSize
+
+        weights1end = 768 * hlSize
+        bias1end    = weights1end + hlSize
+        weights2end = bias1end + hlSize * 2
+        bias2end    = weights2end + 1
+
+        spsa['input_weight_maximum']  = request.POST['input_weight_maximum']
+        spsa['hl_bias_max']           = request.POST['hl_bias_max']
+        spsa['output_weight_maximum'] = request.POST['output_weight_maximum'] 
+        spsa['out_bias_max']          = request.POST['out_bias_max'] 
+
+        spsa['input_weight_c']  = request.POST['input_weight_c']
+        spsa['hl_bias_c']       = request.POST['hl_bias_c']
+        spsa['output_weight_c'] = request.POST['output_weight_c'] 
+        spsa['out_bias_c']      = request.POST['out_bias_c'] 
+
+        spsa['input_weight_r']  = request.POST['input_weight_r']
+        spsa['hl_bias_r']       = request.POST['hl_bias_r']
+        spsa['output_weight_r'] = request.POST['output_weight_r'] 
+        spsa['out_bias_r']      = request.POST['out_bias_r'] 
+
+        ar  = [0, weights1end, bias1end, weights2end, bias2end]
+        max = [request.POST['input_weight_maximum'], 
+               request.POST['hl_bias_max'], 
+               request.POST['output_weight_maximum'], 
+               request.POST['out_bias_max']]
+
+        c  = [request.POST['input_weight_c'], 
+              request.POST['hl_bias_c'], 
+              request.POST['output_weight_c'], 
+              request.POST['out_bias_c']]
+
+        r = [request.POST['input_weight_r'], 
+             request.POST['hl_bias_r'], 
+             request.POST['output_weight_r'], 
+             request.POST['out_bias_r']]
+
+        if not netSHA:
+            netSHA = "foo"
+
+        netFile = "Media/" + netSHA
+
+        f = None
+        exists = True
+
+        try:
+            f = open(netFile, 'rb')
+        except FileNotFoundError:
+            exists = False
+        
+        for i in range(0, 4):
+            for j in range(ar[i], ar[i + 1]):
+                w = None
+
+                if exists:
+                    w = f.read(2)
+
+                value = 0
+
+                if w:
+                    value = struct.unpack('<h', w)[0]
+
+                param          = {}
+                param['index'] = j
+
+                # Raw extraction
+                param['float'] = False
+                param['start'] =  float(value)
+                param['value'] =  float(value)
+                param['min'  ] = -float( max[i])
+                param['max'  ] =  float( max[i])
+                param['c_end'] =  float(   c[i])
+                param['r_end'] =  float(   r[i])
+
+                # Verbatim Fishtest logic for computing these
+                param['c']     = param['c_end'] * spsa['iterations'] ** spsa['Gamma']
+                param['a_end'] = param['r_end'] * param['c_end'] ** 2
+                param['a']     = param['a_end'] * (spsa['A'] + spsa['iterations']) ** spsa['Alpha']
+
+                spsa['parameters'][str(j)] = param
+
+        if exists:
+            f.close()
+
 
     return spsa
+
 
 def get_engine(source, name, sha, bench):
 

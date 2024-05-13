@@ -232,6 +232,8 @@ def workload_to_dictionary(test, result, machine):
         'private'      : OPENBENCH_CONFIG['engines'][test.base_engine]['private'],
     }
 
+    workload['netTune'] = test.upperllr == 72
+
     workload['distribution']   = game_distribution(test, machine)
     workload['spsa']           = spsa_to_dictionary(test, workload)
     workload['reporting_type'] = test.spsa.get('reporting_type', 'BATCHED')
