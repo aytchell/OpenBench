@@ -409,8 +409,13 @@ def extract_spas_params(request, netTune, netSHA):
                 param['float'] = False
                 param['start'] =  float(value)
                 param['value'] =  float(value)
-                param['min'  ] = -float( max[i])
-                param['max'  ] =  float( max[i])
+                if i > 1 :
+                    param['min'  ] = -float( max[i])
+                    param['max'  ] =  float( max[i])
+                else :
+                    param['min'  ] = float(value)
+                    param['max'  ] = float(value)
+
                 param['c_end'] =  float(   c[i])
                 param['r_end'] =  float(   r[i])
 
