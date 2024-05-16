@@ -57,12 +57,13 @@ def view_workload(request, workload, workload_type):
 
     return OpenBench.views.render(request, 'workload.html', data)
 
-def view_speedometer(request, workload, workload_type):
+def view_speedometer(request, workload, workload_type, darkreader):
     assert workload_type in ['TEST']
 
     data = {
-        'workload' : workload,
-        'results'  : [],
+        'workload'   : workload,
+        'results'    : [],
+        'darkreader' : darkreader,
     }
 
     for result in Result.objects.filter(test=workload):

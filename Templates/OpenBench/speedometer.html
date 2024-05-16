@@ -256,7 +256,10 @@
 </style>
 
 <!-- This disables darkreader for the whole speedometer page, with darkreader this page looks cursed-->
-<meta name="darkreader-lock">
+{% if darkreader %}
+  <meta name="darkreader-lock" id="drBlocked">
+{% endif %}
+
 
 <div class="speedometer">
     <div style="position: relative; min-width: 280px; min-height: 280px;">
@@ -342,8 +345,6 @@
       var elo    = document.getElementById('eloValue').innerHTML;
       var llr    = document.getElementById('llrValue').innerHTML;
 
-      console.log(elo);
-
       document.getElementById("eloValueInscription").innerHTML = elo;
       document.getElementById("llrValueInscription").innerHTML = llr;
 
@@ -363,8 +364,6 @@
         llrAlignment = "95px";
       }
 
-      console.log(eloNeedleRotation);
-
       r.style.setProperty('--eloNeedleRotation', eloNeedleRotation);
       r.style.setProperty('--llrNeedleRotation', llrNeedleRotation);
       r.style.setProperty('--lowerPercent', lowerPercent);
@@ -373,8 +372,47 @@
       r.style.setProperty('--llrAlignment', llrAlignment);
   }
 
+  function detectDarkreader() {
+        const darkreaderDetected = [...document.querySelectorAll('style')].some((el) => el.classList.contains('darkreader'));
+
+        if (darkreaderDetected) {
+            window.location.replace('dr');
+        }
+  }
+
+  function returnToUsualURL() {
+      var url = window.location.href;
+
+      if (url.slice(-2) != "dr")
+        return false;
+
+      history.replaceState(null, '', url.slice(0, -2));
+      return true;
+  }
+
+  function recolorBackground() {
+    $("#body").load('.', function() {
+        setSpeedometerStuff();
+    });
+  }
+
   window.onload = function foo() {
-      setSpeedometerStuff(); 
+      detectDarkreader();
+
+      var drBlocked = returnToUsualURL();
+
+      if (drBlocked) {
+          var b = document.querySelector('body');
+          
+          b.style.setProperty('--color1', "#1a1c1d");
+          b.style.setProperty('--color2', "#222526");
+          b.style.setProperty('--color3', "#2c3032");
+          b.style.setProperty('--color-font1', "#d3cfca");
+          b.style.setProperty('--color-font2', "#a9a297");
+          b.style.setProperty('--color-font3', "#68ff7a");
+      }
+
+      setSpeedometerStuff();
   }
 
   setInterval(function(){
