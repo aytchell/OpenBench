@@ -436,7 +436,7 @@ def event(request, id):
     except:
         return redirect(request, '/index/', error='No logs for event exist')
 
-def speedometer(request, id, action=None, darkreader = False): 
+def speedometer(request, id, action=None, darkreader = False, colors = []): 
     # Request is to modify or interact with the Test
     if action != None:
         return modify_workload(request, id, action)
@@ -449,10 +449,10 @@ def speedometer(request, id, action=None, darkreader = False):
     if test.test_mode != 'SPRT':
         return redirect(request, '/index/', error='This test is not a SPRT')
 
-    return view_speedometer(request, test, 'TEST', darkreader)
+    return view_speedometer(request, test, 'TEST', darkreader, colors)
 
-def speedometerdr(request, id, action=None):
-    return speedometer(request, id, action, True)
+def speedometerdr(request, id, action=None, colors=""):
+    return speedometer(request, id, action, True, colors[1:].split("#"))
 
 def stats(request, id, action=None): 
     # Request is to modify or interact with the Test

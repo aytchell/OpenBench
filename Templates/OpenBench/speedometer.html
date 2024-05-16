@@ -328,6 +328,8 @@
     <div id="eloValue">{{workload|tinyStatBlock}}</div>
     <div id="llrValue">{{workload|llrBlock|linebreaksbr}}</div>
   </div>
+
+  <div id="colors">{{colors|drColors|linebreaksbr}}</div>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -376,17 +378,31 @@
         const darkreaderDetected = [...document.querySelectorAll('style')].some((el) => el.classList.contains('darkreader'));
 
         if (darkreaderDetected) {
-            window.location.replace('dr');
+            setSpeedometerStuff();
+
+            var b = document.querySelector('body');
+
+            var bgString    = "";
+            var fontString  = "";
+
+            for (let i = 1; i < 4; i++) {
+                bgString   += getComputedStyle(b).getPropertyValue("--darkreader-bg--color"        + i).replace("#", "%23");
+                fontString += getComputedStyle(b).getPropertyValue("--darkreader-text--color-font" + i).replace("#", "%23");
+            }
+
+            var urlAddition = "dr/" + bgString + fontString;
+
+            window.location.replace(urlAddition);
         }
   }
 
   function returnToUsualURL() {
       var url = window.location.href;
 
-      if (url.slice(-2) != "dr")
+      if (!url.includes("/dr/"))
         return false;
 
-      history.replaceState(null, '', url.slice(0, -2));
+      history.replaceState(null, '', url.slice(0, url.search("dr/")));
       return true;
   }
 
@@ -403,7 +419,15 @@
 
       if (drBlocked) {
           var b = document.querySelector('body');
+          var c = document.getElementById("colors").innerHTML;
+
+          var ar = c.split("\n");
           
+          for (let i = 0; i < 3; i++) {
+             b.style.setProperty('--color'      + i, "#" + ar[i    ]);
+             b.style.setProperty('--color-font' + i, "#" + ar[i + 3]);
+          }
+
           b.style.setProperty('--color1', "#1a1c1d");
           b.style.setProperty('--color2', "#222526");
           b.style.setProperty('--color3', "#2c3032");

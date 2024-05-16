@@ -195,6 +195,14 @@ def speedometerStats(test):
 
     return '\n'.join(lines)
 
+def drColors(colors):
+    ret = ""
+
+    for color in colors:
+        ret += color + "\n"
+    
+    return ret
+
 
 def testResultColour(test):
 
@@ -292,6 +300,7 @@ register.filter('longStatBlock', longStatBlock)
 register.filter('tinyStatBlock', tinyStatBlock)
 register.filter('llrBlock', llrBlock)
 register.filter('speedometerStats', speedometerStats)
+register.filter('drColors', drColors)
 register.filter('testResultColour', testResultColour)
 register.filter('sumAttributes', sumAttributes)
 register.filter('insertCommas', insertCommas)
