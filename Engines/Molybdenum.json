@@ -1,11 +1,11 @@
 {
     "private" : false,
-    "nps"     : 2400000,
+    "nps"     : 2290109,
     "source"  : "https://github.com/rn5f107s2/Molybdenum",
 
     "build" : {
         "path"      : "",
-        "compilers" : ["clang++>=16"],
+        "compilers" : ["clang++"],
         "cpuflags"  : [],
         "systems"   : ["Linux"]
     },
