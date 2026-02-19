@@ -1,0 +1,17 @@
+labels:
+  platform: linux/amd64
+
+steps:
+  - name: Build Client's docker image
+    image: codeberg.org/woodpecker-plugins/docker-buildx:5.2.2
+    settings:
+      repo: jcr.internal.jambit.io/hlerchl/bench-client
+      registry: jcr.internal.jambit.io
+      dockerfile: Dockerfile-Client
+      tags:
+        - 0.0.1-${CI_PIPELINE_CREATED}
+        - latest
+      username:
+          from_secret: jcr_user
+      password:
+          from_secret: jcr_passwd
