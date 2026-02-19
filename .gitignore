@@ -12,6 +12,7 @@ Scripts/Networks/*
 Media/*
 
 !Client/*.py
+!Client/run_client.sh
 !Client/cutechess-ob
 !Client/cutechess-ob.exe
 

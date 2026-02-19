@@ -1,0 +1,20 @@
+FROM debian:forky
+
+
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN apt-get -y install clang make python3 python3-venv
+
+RUN useradd -m client
+
+USER client
+RUN mkdir /home/client/Client
+COPY --chown=client Client/* /home/client/Client/
+
+RUN python3 -m venv /home/client/Client/venv
+RUN cd /home/client/Client && . venv/bin/activate && pip install -r requirements.txt
+
+
+WORKDIR /home/client/Client
+
+CMD ["./run_client.sh"]
