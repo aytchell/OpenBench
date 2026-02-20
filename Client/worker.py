@@ -480,7 +480,7 @@ class Cutechess:
 
     @staticmethod
     def pgnout_settings(config, timestamp, cutechess_idx):
-        return '-pgnout file=%s' % (Cutechess.pgn_name(config, timestamp, cutechess_idx))
+        return '-pgnout file=%s nodes=true seldepth=true' % (Cutechess.pgn_name(config, timestamp, cutechess_idx))
 
     @staticmethod
     def update_results(results, line):
