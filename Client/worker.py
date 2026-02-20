@@ -739,8 +739,7 @@ def cleanup_client():
     file_age = lambda x: time.time() - os.path.getmtime(x)
 
     for file in os.listdir('PGNs'):
-        if file_age(os.path.join('PGNs', file)) > SECONDS_PER_DAY:
-            os.remove(os.path.join('PGNs', file))
+        os.remove(os.path.join('PGNs', file))
 
     for file in os.listdir('Engines'):
         if file_age(os.path.join('Engines', file)) > SECONDS_PER_WEEK:
@@ -1025,6 +1024,8 @@ def complete_workload(config):
             compact    = config.workload['test']['upload_pgns'] == 'COMPACT'
             pgn_files  = [Cutechess.pgn_name(config, timestamp, x) for x in range(cutechess_cnt)]
             ServerReporter.report_pgn(config, compress_list_of_pgns(pgn_files, scale_factor, compact))
+
+            cleanup_client()
 
 def safe_download_network_weights(config, branch):
 
