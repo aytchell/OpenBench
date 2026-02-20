@@ -480,7 +480,7 @@ class Cutechess:
 
     @staticmethod
     def pgnout_settings(config, timestamp, cutechess_idx):
-        return '-pgnout %s' % (Cutechess.pgn_name(config, timestamp, cutechess_idx))
+        return '-pgnout file=%s' % (Cutechess.pgn_name(config, timestamp, cutechess_idx))
 
     @staticmethod
     def update_results(results, line):
@@ -1119,6 +1119,7 @@ def safe_run_benchmarks(config, branch, engine, network):
 def build_cutechess_command(config, dev_cmd, base_cmd, scale_factor, timestamp, cutechess_idx):
 
     flags  = ' ' + Cutechess.basic_settings(config)
+    flags += ' ' + "-output format=cutechess"
     flags += ' ' + Cutechess.concurrency_settings(config)
     flags += ' ' + Cutechess.adjudication_settings(config)
     flags += ' ' + Cutechess.engine_settings(config, dev_cmd, 'dev', scale_factor, cutechess_idx)
