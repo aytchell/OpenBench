@@ -3,7 +3,7 @@ FROM debian:forky
 
 RUN apt-get update
 RUN apt-get -y upgrade
-RUN apt-get -y install clang make python3 python3-venv
+RUN apt-get -y install clang make python3 python3-venv procps
 
 RUN useradd -m client
 
