@@ -3,13 +3,14 @@
 source venv/bin/activate
 
 echo "Using $ENV_USER as username"
+echo "Backup server is $BACKUP_SERVER_IP"
 echo "Running with $ENV_THREADS threads"
 
 if [ -z $ENV_PASSWD ]; then
     echo "Password is empty"
 else
     echo "Password given"
-    echo "Startin dummy http server"
+    echo "Starting dummy http server"
     python3 -m http.server 8080 &
 fi
 
