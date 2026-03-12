@@ -35,6 +35,7 @@ import time
 import traceback
 import uuid
 import zipfile
+import http.client
 
 from subprocess import PIPE, Popen, call, STDOUT
 from itertools import combinations_with_replacement
@@ -214,6 +215,25 @@ class Configuration:
         if os.path.isfile('machine.txt'):
             with open('machine.txt') as fin:
                 self.machine_id = fin.readlines()[0]
+
+def upload_pgn_backup(test_id, name, compressed_pgns):
+    ip = os.environ['BACKUP_SERVER_IP']
+    
+    conn = http.client.HTTPConnection(ip, 80)
+
+    headers = {
+        "Content-Length": str(len(compressed_pgns)),
+        "X-Filename": name,
+        "X-Test-ID": test_id
+    }
+
+    conn.request("POST", "/upload", body=compressed_pgns, headers=headers)
+
+    response = conn.getresponse()
+
+    if (response.status != 200):
+        print("Backup file upload failed!")
+
 
 class ServerReporter:
 
@@ -1019,13 +1039,27 @@ def complete_workload(config):
             Cutechess.kill_everything(dev_name, base_name)
             raise
 
-        # Upload the PGN if requested
-        if config.workload['test']['upload_pgns'] != 'FALSE':
-            compact    = config.workload['test']['upload_pgns'] == 'COMPACT'
-            pgn_files  = [Cutechess.pgn_name(config, timestamp, x) for x in range(cutechess_cnt)]
-            ServerReporter.report_pgn(config, compress_list_of_pgns(pgn_files, scale_factor, compact))
 
-            cleanup_client()
+        compact    = config.workload['test']['upload_pgns'] == 'FALSE' or config.workload['test']['upload_pgns'] == 'COMPACT'
+        pgn_files  = [Cutechess.pgn_name(config, timestamp, x) for x in range(cutechess_cnt)]
+
+        # Format: test.result.book-index.timestamp.pgn.bz2
+
+        name = ("%s.%s.%s.%s.pgn.bz2") % (config.workload['test']['id'], config.workload['result']['id'], config.workload['test']['book_index'], time.time())
+
+        compressed = compress_list_of_pgns(pgn_files, scale_factor, compact)
+            
+        upload_pgn_backup(config.workload['test']['id'], name, compressed)
+
+
+    # Upload the PGN to the main server if requested
+    if config.workload['test']['upload_pgns'] != 'FALSE':
+        ServerReporter.report_pgn(config, compressed)
+
+        cleanup_client()
+
+
+
 
 def safe_download_network_weights(config, branch):
 
