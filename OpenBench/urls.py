@@ -19,8 +19,13 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 import django.urls, OpenBench.views
+import django.urls, OpenBench.views
+from django.views.generic.base import TemplateView
 
 urlpatterns = [
+    django.urls.path(r'robots.txt',
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
 
     # Links for account management
     django.urls.path(r'register/', OpenBench.views.register),
