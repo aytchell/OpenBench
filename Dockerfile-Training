@@ -1,0 +1,17 @@
+# Start from an official NVIDIA image
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+
+# Install OpenSSH Server
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+
+# Set a password (change 'password' to something secure!)
+RUN echo 'root:DemR00tSeinPassw0rt.' | chpasswd
+
+# Allow root login via SSH (use with caution!)
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Standard SSH port
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]
