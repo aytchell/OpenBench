@@ -3,7 +3,7 @@ labels:
 
 steps:
   - name: Build Client's docker image
-    image: codeberg.org/woodpecker-plugins/docker-buildx:5.2.2
+    image: codeberg.org/woodpecker-plugins/docker-buildx:6.0.3
     settings:
       repo: jcr.internal.jambit.io/hlerchl/bench-client
       registry: jcr.internal.jambit.io
@@ -16,7 +16,7 @@ steps:
       password:
           from_secret: jcr_passwd
   - name: Build Training's docker image
-    image: codeberg.org/woodpecker-plugins/docker-buildx:5.2.2
+    image: codeberg.org/woodpecker-plugins/docker-buildx:6.0.3
     settings:
       repo: jcr.internal.jambit.io/hlerchl/training-client
       registry: jcr.internal.jambit.io
