@@ -20,7 +20,8 @@
         "UHO_4060_v2.epd",
         "UHO_4060_vB.epd",
         "UHO_4060_vT.epd",
-        "startpos.epd"
+        "startpos.epd",
+        "UHO_Lichess_4852_v1.epd"
     ],
 
     "engines" : [
